@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RETRO CALC — MK-VII</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --body-bg: #e8e0d0;
+    --calc-body: #f0e8d8;
+    --calc-shadow: #b8a898;
+    --display-bg: #1a2412;
+    --display-glow: #7ecb35;
+    --display-text: #a8e060;
+    --display-dim: #3a5820;
+    --btn-num-bg: #f5ede0;
+    --btn-num-top: #faf4ec;
+    --btn-num-shadow: #c8b8a0;
+    --btn-num-text: #2a2018;
+    --btn-op-bg: #2c2018;
+    --btn-op-top: #3c3028;
+    --btn-op-text: #f0c060;
+    --btn-eq-bg: #c84820;
+    --btn-eq-top: #e05828;
+    --btn-eq-text: #fff8f0;
+    --btn-fn-bg: #d8cfc0;
+    --btn-fn-top: #e8dfd0;
+    --btn-fn-text: #5a4030;
+    --accent: #c84820;
+    --accent2: #f0c060;
+    --vent-color: #d0c8b8;
+    --screw-color: #c0b0a0;
+    --label-color: #8a7060;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: var(--body-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Rajdhani', sans-serif;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Retro grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(100,80,60,0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(100,80,60,0.07) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(100,80,60,0.18) 100%);
+    pointer-events: none;
+  }
+
+  /* CALCULATOR SHELL */
+  .calc-shell {
+    position: relative;
+    animation: bootUp 0.8s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  @keyframes bootUp {
+    from { opacity: 0; transform: scale(0.92) translateY(30px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .calculator {
+    background: var(--calc-body);
+    width: 340px;
+    border-radius: 18px 18px 24px 24px;
+    padding: 22px 22px 28px;
+    position: relative;
+    box-shadow:
+      0 2px 0 #fff8f0 inset,
+      0 -2px 0 rgba(0,0,0,0.12) inset,
+      2px 0 0 rgba(255,255,255,0.6) inset,
+      -2px 0 0 rgba(0,0,0,0.08) inset,
+      0 30px 80px rgba(80,50,30,0.35),
+      0 8px 20px rgba(80,50,30,0.2),
+      0 2px 4px rgba(80,50,30,0.15);
+    background-image:
+      radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.5) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+
+  /* SCREWS */
+  .screw {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: radial-gradient(circle at 35% 35%, var(--screw-color), #8a7860);
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .screw::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 15%;
+    width: 70%; height: 1.5px;
+    background: rgba(0,0,0,0.3);
+    transform: translateY(-50%) rotate(45deg);
+    border-radius: 1px;
+  }
+  .screw.tl { top: 14px; left: 14px; }
+  .screw.tr { top: 14px; right: 14px; }
+  .screw.bl { bottom: 16px; left: 14px; }
+  .screw.br { bottom: 16px; right: 14px; }
+
+  /* BRAND LABEL */
+  .brand-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding: 0 4px;
+  }
+
+  .brand-name {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1.05rem;
+    letter-spacing: 0.22em;
+    color: var(--label-color);
+  }
+
+  .model-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    background: rgba(200,72,32,0.1);
+    padding: 2px 7px;
+    border-radius: 2px;
+    border: 1px solid rgba(200,72,32,0.2);
+  }
+
+  /* DISPLAY */
+  .display-housing {
+    background: #141a0e;
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 18px;
+    box-shadow:
+      0 3px 10px rgba(0,0,0,0.5) inset,
+      0 1px 0 rgba(255,255,255,0.15),
+      0 4px 15px rgba(126,203,53,0.08);
+    border: 1px solid #0a0e07;
+  }
+
+  .display {
+    background: var(--display-bg);
+    border-radius: 6px;
+    padding: 12px 14px 10px;
+    position: relative;
+    overflow: hidden;
+    min-height: 90px;
+  }
+
+  /* Scanline effect */
+  .display::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Glow reflection */
+  .display::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 35%;
+    background: linear-gradient(to bottom, rgba(168,224,96,0.04), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .display-expression {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--display-dim);
+    letter-spacing: 0.05em;
+    min-height: 18px;
+    text-align: right;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .display-main {
+    font-family: 'VT323', monospace;
+    font-size: 3.2rem;
+    color: var(--display-text);
+    text-align: right;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    position: relative;
+    z-index: 3;
+    text-shadow:
+      0 0 10px rgba(126,203,53,0.7),
+      0 0 25px rgba(126,203,53,0.35),
+      0 0 50px rgba(126,203,53,0.15);
+    transition: all 0.08s ease;
+    word-break: break-all;
+    overflow: hidden;
+  }
+
+  .display-main.flash {
+    color: #fff;
+    text-shadow: 0 0 20px #fff, 0 0 40px var(--display-glow);
+  }
+
+  /* Display status row */
+  .display-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    position: relative;
+    z-index: 3;
+  }
+
+  .status-dots {
+    display: flex;
+    gap: 5px;
+  }
+
+  .status-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--display-dim);
+    transition: all 0.3s;
+  }
+
+  .status-dot.on {
+    background: var(--display-glow);
+    box-shadow: 0 0 5px var(--display-glow);
+  }
+
+  .mem-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--display-dim);
+    letter-spacing: 0.1em;
+    transition: color 0.3s;
+  }
+
+  .mem-label.on { color: var(--display-glow); }
+
+  /* VENT LINES */
+  .vents {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 0;
+    margin-bottom: 14px;
+    position: relative;
+  }
+
+  .vents::before, .vents::after {
+    content: 'SCIENTIFIC CALCULATOR';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: var(--label-color);
+  }
+
+  .vents::before { left: 0; }
+  .vents::after { right: 0; content: '© RETRO TECH'; }
+
+  .vent-line {
+    height: 2px;
+    background: linear-gradient(to right,
+      transparent 0%,
+      var(--vent-color) 20%,
+      var(--vent-color) 80%,
+      transparent 100%);
+    border-radius: 1px;
+    opacity: 0.7;
+  }
+
+  /* BUTTON GRID */
+  .btn-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  /* BASE BUTTON */
+  .btn {
+    position: relative;
+    border: none;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    border-radius: 7px;
+    outline: none;
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    height: 52px;
+  }
+
+  .btn:active {
+    transform: translateY(3px) scale(0.97);
+  }
+
+  /* Ripple */
+  .btn .ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    animation: rippleAnim 0.4s linear;
+    background: rgba(255,255,255,0.35);
+    pointer-events: none;
+  }
+
+  @keyframes rippleAnim {
+    to { transform: scale(4); opacity: 0; }
+  }
+
+  /* NUMBER BUTTONS */
+  .btn-num {
+    background: linear-gradient(to bottom, var(--btn-num-top) 0%, var(--btn-num-bg) 60%);
+    color: var(--btn-num-text);
+    font-size: 1.3rem;
+    letter-spacing: 0.02em;
+    box-shadow:
+      0 4px 0 var(--btn-num-shadow),
+      0 5px 8px rgba(80,50,30,0.2),
+      inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+
+  .btn-num:active {
+    box-shadow:
+      0 1px 0 var(--btn-num-shadow),
+      0 2px 4px rgba(80,50,30,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+
+  .btn-num:hover {
+    background: linear-gradient(to bottom, #fff8f0 0%, #f8eedf 60%);
+  }
+
+  /* OPERATOR BUTTONS */
+  .btn-op {
+    background: linear-gradient(to bottom, var(--btn-op-top) 0%, var(--btn-op-bg) 60%);
+    color: var(--btn-op-text);
+    font-size: 1.25rem;
+    box-shadow:
+      0 4px 0 #1a1008,
+      0 5px 10px rgba(20,10,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.12);
+    font-weight: 700;
+  }
+
+  .btn-op:active {
+    box-shadow:
+      0 1px 0 #1a1008,
+      0 2px 4px rgba(20,10,0,0.3),
+      inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+
+  .btn-op:hover {
+    background: linear-gradient(to bottom, #504030 0%, #382810 60%);
+  }
+
+  /* EQUALS BUTTON */
+  .btn-eq {
+    background: linear-gradient(to bottom, var(--btn-eq-top) 0%, var(--btn-eq-bg) 60%);
+    color: var(--btn-eq-text);
+    font-size: 1.5rem;
+    font-weight: 700;
+    box-shadow:
+      0 4px 0 #902808,
+      0 5px 12px rgba(200,72,32,0.35),
+      inset 0 1px 0 rgba(255,200,180,0.4);
+    letter-spacing: 0.05em;
+  }
+
+  .btn-eq:active {
+    box-shadow:
+      0 1px 0 #902808,
+      0 2px 5px rgba(200,72,32,0.2),
+      inset 0 1px 0 rgba(255,200,180,0.4);
+  }
+
+  .btn-eq:hover {
+    background: linear-gradient(to bottom, #f06038 0%, #d85020 60%);
+    box-shadow: 0 4px 0 #902808, 0 5px 20px rgba(200,72,32,0.5), inset 0 1px 0 rgba(255,200,180,0.4);
+  }
+
+  /* FUNCTION BUTTONS */
+  .btn-fn {
+    background: linear-gradient(to bottom, var(--btn-fn-top) 0%, var(--btn-fn-bg) 60%);
+    color: var(--btn-fn-text);
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    box-shadow:
+      0 4px 0 #b0a090,
+      0 5px 8px rgba(80,60,40,0.18),
+      inset 0 1px 0 rgba(255,255,255,0.8);
+    text-transform: uppercase;
+  }
+
+  .btn-fn:active {
+    box-shadow:
+      0 1px 0 #b0a090,
+      0 2px 3px rgba(80,60,40,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.8);
+  }
+
+  .btn-fn:hover {
+    background: linear-gradient(to bottom, #f0e8d8 0%, #e4d8c8 60%);
+  }
+
+  /* Special clear button */
+  .btn-clear {
+    background: linear-gradient(to bottom, #f0d8c8 0%, #e0c0a8 60%);
+    color: #7a2010;
+    box-shadow:
+      0 4px 0 #b08070,
+      0 5px 8px rgba(80,40,20,0.2),
+      inset 0 1px 0 rgba(255,255,255,0.8);
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  .btn-clear:hover {
+    background: linear-gradient(to bottom, #f8e0d0 0%, #e8c8b0 60%);
+  }
+
+  .btn-zero {
+    grid-column: span 1;
+  }
+
+  .btn-sub-label {
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    opacity: 0.5;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* HISTORY PANEL */
+  .history-panel {
+    position: absolute;
+    left: calc(100% + 16px);
+    top: 0;
+    width: 200px;
+    background: var(--calc-body);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.5) inset,
+      0 20px 60px rgba(80,50,30,0.25),
+      0 4px 12px rgba(80,50,30,0.15);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-image: radial-gradient(ellipse at 30% 10%, rgba(255,255,255,0.4) 0%, transparent 60%);
+  }
+
+  .history-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 0.9rem;
+    letter-spacing: 0.2em;
+    color: var(--label-color);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(100,80,60,0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .history-clear-btn {
+    background: none;
+    border: none;
+    font-size: 0.65rem;
+    color: var(--accent);
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 5px;
+    border-radius: 3px;
+    transition: background 0.2s;
+  }
+
+  .history-clear-btn:hover { background: rgba(200,72,32,0.1); }
+
+  .history-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .history-list::-webkit-scrollbar { width: 3px; }
+  .history-list::-webkit-scrollbar-track { background: transparent; }
+  .history-list::-webkit-scrollbar-thumb { background: var(--vent-color); border-radius: 3px; }
+
+  .history-item {
+    background: rgba(100,80,60,0.07);
+    border-radius: 6px;
+    padding: 7px 9px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    animation: histSlide 0.25s ease both;
+  }
+
+  @keyframes histSlide {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .history-item:hover {
+    background: rgba(200,72,32,0.08);
+    border-color: rgba(200,72,32,0.2);
+  }
+
+  .hist-expr {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--label-color);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .hist-result {
+    font-family: 'VT323', monospace;
+    font-size: 1.1rem;
+    color: var(--display-bg);
+    letter-spacing: 0.05em;
+  }
+
+  .hist-empty {
+    font-size: 0.72rem;
+    color: rgba(100,80,60,0.35);
+    text-align: center;
+    margin-top: 2rem;
+    font-style: italic;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  /* BOTTOM RUBBER FEET */
+  .feet {
+    position: absolute;
+    bottom: -5px;
+    left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 18px;
+  }
+
+  .foot {
+    width: 20px; height: 5px;
+    background: #2c2018;
+    border-radius: 0 0 3px 3px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+
+  /* SOLAR PANEL STRIP */
+  .solar-strip {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 2px;
+    margin-bottom: 12px;
+  }
+
+  .solar-cell {
+    height: 12px;
+    background: linear-gradient(135deg, #3a4a5a 0%, #1a2a3a 50%, #2a3848 100%);
+    border-radius: 2px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .solar-cell::after {
+    content: '';
+    position: absolute;
+    top: 1px; left: 1px;
+    right: 40%; bottom: 40%;
+    background: rgba(255,255,255,0.08);
+    border-radius: 1px;
+  }
+
+  /* Keyboard shortcut hint */
+  .keyboard-hint {
+    text-align: center;
+    margin-top: 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    color: rgba(100,80,60,0.4);
+    letter-spacing: 0.1em;
+  }
+
+  @media (max-width: 620px) {
+    .history-panel { display: none; }
+    .calculator { width: 310px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="calc-shell">
+  <!-- HISTORY PANEL -->
+  <div class="history-panel">
+    <div class="history-title">
+      History
+      <button class="history-clear-btn" onclick="clearHistory()">Clear</button>
+    </div>
+    <div class="history-list" id="history-list">
+      <div class="hist-empty" id="hist-empty">No calculations yet</div>
+    </div>
+  </div>
+
+  <!-- MAIN CALCULATOR -->
+  <div class="calculator">
+    <div class="screw tl"></div>
+    <div class="screw tr"></div>
+    <div class="screw bl"></div>
+    <div class="screw br"></div>
+
+    <!-- BRAND -->
+    <div class="brand-strip">
+      <span class="brand-name">RetroCalc</span>
+      <span class="model-name">MK-VII</span>
+    </div>
+
+    <!-- SOLAR CELLS -->
+    <div class="solar-strip">
+      <div class="solar-cell"></div>
+      <div class="solar-cell"></div>
+      <div class="solar-cell"></div>
+      <div class="solar-cell"></div>
+      <div class="solar-cell"></div>
+      <div class="solar-cell"></div>
+      <div class="solar-cell"></div>
+      <div class="solar-cell"></div>
+    </div>
+
+    <!-- DISPLAY -->
+    <div class="display-housing">
+      <div class="display">
+        <div class="display-expression" id="display-expr">&nbsp;</div>
+        <div class="display-main" id="display-main">0</div>
+        <div class="display-status">
+          <div class="status-dots">
+            <div class="status-dot on" id="dot1"></div>
+            <div class="status-dot" id="dot2"></div>
+            <div class="status-dot" id="dot3"></div>
+          </div>
+          <span class="mem-label" id="mem-label">MEM</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- VENTS -->
+    <div class="vents">
+      <div class="vent-line"></div>
+      <div class="vent-line"></div>
+      <div class="vent-line"></div>
+    </div>
+
+    <!-- BUTTON GRID -->
+    <div class="btn-grid">
+      <!-- Row 1: Functions -->
+      <button class="btn btn-fn btn-clear" onclick="calcFn('AC')">AC</button>
+      <button class="btn btn-fn" onclick="calcFn('+/-')">+/−</button>
+      <button class="btn btn-fn" onclick="calcFn('%')">%</button>
+      <button class="btn btn-op" onclick="calcOp('/')">÷</button>
+
+      <!-- Row 2: 7 8 9 × -->
+      <button class="btn btn-num" onclick="calcNum('7')">7</button>
+      <button class="btn btn-num" onclick="calcNum('8')">8</button>
+      <button class="btn btn-num" onclick="calcNum('9')">9</button>
+      <button class="btn btn-op" onclick="calcOp('*')">×</button>
+
+      <!-- Row 3: 4 5 6 − -->
+      <button class="btn btn-num" onclick="calcNum('4')">4</button>
+      <button class="btn btn-num" onclick="calcNum('5')">5</button>
+      <button class="btn btn-num" onclick="calcNum('6')">6</button>
+      <button class="btn btn-op" onclick="calcOp('-')">−</button>
+
+      <!-- Row 4: 1 2 3 + -->
+      <button class="btn btn-num" onclick="calcNum('1')">1</button>
+      <button class="btn btn-num" onclick="calcNum('2')">2</button>
+      <button class="btn btn-num" onclick="calcNum('3')">3</button>
+      <button class="btn btn-op" onclick="calcOp('+')">+</button>
+
+      <!-- Row 5: 0 . = -->
+      <button class="btn btn-num btn-zero" onclick="calcNum('0')">0</button>
+      <button class="btn btn-num" onclick="calcNum('.')">.</button>
+      <button class="btn btn-fn" onclick="calcFn('⌫')">⌫</button>
+      <button class="btn btn-eq" onclick="calcEquals()">=</button>
+    </div>
+
+    <div class="keyboard-hint">Keyboard supported · Click history to recall</div>
+  </div>
+
+  <div class="feet">
+    <div class="foot"></div>
+    <div class="foot"></div>
+    <div class="foot"></div>
+    <div class="foot"></div>
+  </div>
+</div>
+
+<script>
+  let currentVal = '0';
+  let prevVal = '';
+  let operator = '';
+  let shouldReset = false;
+  let memory = 0;
+  let hasMemory = false;
+  let history = [];
+
+  const display = document.getElementById('display-main');
+  const exprDisplay = document.getElementById('display-expr');
+  const memLabel = document.getElementById('mem-label');
+
+  function updateDisplay(val) {
+    let str = String(val);
+    if (str.length > 12) str = parseFloat(val).toExponential(5);
+    display.textContent = str;
+    // Adjust font size for long numbers
+    const len = str.length;
+    if (len > 10) display.style.fontSize = '2rem';
+    else if (len > 7) display.style.fontSize = '2.6rem';
+    else display.style.fontSize = '3.2rem';
+  }
+
+  function flashDisplay() {
+    display.classList.add('flash');
+    document.getElementById('dot2').classList.add('on');
+    setTimeout(() => {
+      display.classList.remove('flash');
+      document.getElementById('dot2').classList.remove('on');
+    }, 200);
+  }
+
+  function calcNum(n) {
+    addRipple(event);
+    document.getElementById('dot1').classList.add('on');
+    setTimeout(() => document.getElementById('dot1').classList.remove('on'), 100);
+
+    if (shouldReset) {
+      currentVal = (n === '.') ? '0.' : n;
+      shouldReset = false;
+    } else {
+      if (n === '.' && currentVal.includes('.')) return;
+      if (currentVal === '0' && n !== '.') currentVal = n;
+      else if (currentVal.length < 12) currentVal += n;
+    }
+    updateDisplay(currentVal);
+  }
+
+  function calcOp(op) {
+    addRipple(event);
+    if (operator && !shouldReset) {
+      calcEquals(true);
+    }
+    prevVal = currentVal;
+    operator = op;
+    shouldReset = true;
+
+    const opSymbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+    exprDisplay.textContent = `${prevVal} ${opSymbols[op]}`;
+  }
+
+  function calcEquals(silent = false) {
+    if (event && !silent) addRipple(event);
+    if (!operator || !prevVal) return;
+
+    const a = parseFloat(prevVal);
+    const b = parseFloat(currentVal);
+    let result;
+    const opSymbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+
+    switch (operator) {
+      case '+': result = a + b; break;
+      case '-': result = a - b; break;
+      case '*': result = a * b; break;
+      case '/':
+        if (b === 0) { showError('DIV BY 0'); return; }
+        result = a / b;
+        break;
+      default: return;
+    }
+
+    // Round to avoid float weirdness
+    result = parseFloat(result.toPrecision(12));
+
+    const exprStr = `${prevVal} ${opSymbols[operator]} ${currentVal}`;
+    const resultStr = String(result);
+
+    if (!silent) {
+      flashDisplay();
+      addToHistory(exprStr, resultStr);
+      exprDisplay.textContent = `${exprStr} =`;
+    }
+
+    currentVal = resultStr;
+    operator = '';
+    prevVal = '';
+    shouldReset = true;
+    updateDisplay(result);
+  }
+
+  function calcFn(fn) {
+    addRipple(event);
+    switch (fn) {
+      case 'AC':
+        currentVal = '0';
+        prevVal = '';
+        operator = '';
+        shouldReset = false;
+        exprDisplay.textContent = '\u00a0';
+        updateDisplay('0');
+        flashDisplay();
+        break;
+      case '+/-':
+        if (currentVal !== '0') {
+          currentVal = String(-parseFloat(currentVal));
+          updateDisplay(currentVal);
+        }
+        break;
+      case '%':
+        currentVal = String(parseFloat(currentVal) / 100);
+        updateDisplay(currentVal);
+        break;
+      case '⌫':
+        if (currentVal.length > 1) currentVal = currentVal.slice(0, -1);
+        else currentVal = '0';
+        updateDisplay(currentVal);
+        break;
+    }
+  }
+
+  function showError(msg) {
+    display.textContent = msg;
+    display.style.fontSize = '2rem';
+    display.classList.add('flash');
+    setTimeout(() => {
+      display.classList.remove('flash');
+      currentVal = '0';
+      operator = '';
+      prevVal = '';
+      shouldReset = false;
+      updateDisplay('0');
+    }, 1500);
+  }
+
+  function addToHistory(expr, result) {
+    history.unshift({ expr, result });
+    if (history.length > 20) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('history-list');
+    const empty = document.getElementById('hist-empty');
+
+    if (history.length === 0) {
+      list.innerHTML = '<div class="hist-empty" id="hist-empty">No calculations yet</div>';
+      return;
+    }
+
+    list.innerHTML = history.map((h, i) => `
+      <div class="history-item" onclick="recallHistory(${i})" style="animation-delay:${i*0.04}s">
+        <div class="hist-expr">${escHtml(h.expr)}</div>
+        <div class="hist-result">${escHtml(h.result)}</div>
+      </div>
+    `).join('');
+  }
+
+  function recallHistory(idx) {
+    const item = history[idx];
+    if (!item) return;
+    currentVal = item.result;
+    shouldReset = true;
+    updateDisplay(currentVal);
+    flashDisplay();
+  }
+
+  function clearHistory() {
+    history = [];
+    renderHistory();
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Ripple effect
+  function addRipple(e) {
+    if (!e || !e.currentTarget) return;
+    const btn = e.currentTarget;
+    const ripple = document.createElement('span');
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = (e.clientX || rect.left + rect.width/2) - rect.left - size/2;
+    const y = (e.clientY || rect.top + rect.height/2) - rect.top - size/2;
+    ripple.className = 'ripple';
+    ripple.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px;`;
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 500);
+  }
+
+  // Keyboard support
+  document.addEventListener('keydown', e => {
+    const key = e.key;
+    if (!isNaN(key) || key === '.') { calcNum(key); return; }
+    if (key === 'Enter' || key === '=') { calcEquals(); return; }
+    if (['+', '-', '*', '/'].includes(key)) { calcOp(key); return; }
+    if (key === 'Backspace') { calcFn('⌫'); return; }
+    if (key === 'Escape') { calcFn('AC'); return; }
+    if (key === '%') { calcFn('%'); return; }
+  });
+
+  // Boot animation: blink display
+  setTimeout(() => {
+    display.textContent = '88888888';
+    display.style.color = 'rgba(168,224,96,0.3)';
+    setTimeout(() => {
+      display.style.color = '';
+      display.textContent = '0';
+    }, 400);
+  }, 200);
+</script>
+</body>
+</html>
